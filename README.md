@@ -1,5 +1,7 @@
 # 🧭 Benefit Navigator
 
+[![CI](https://github.com/data-geek-astronomy/benefit-navigator/actions/workflows/ci.yml/badge.svg)](https://github.com/data-geek-astronomy/benefit-navigator/actions/workflows/ci.yml)
+
 **An AI assistant that helps people find out which public benefits they may qualify for — in plain language, in about two minutes.**
 
 Built for the kind of community nonprofit where a handful of caseworkers field hundreds of "what am I eligible for?" questions a month. A client (or a caseworker on their behalf) describes their household in ordinary words; Benefit Navigator asks a few follow-ups, screens them against programs like SNAP, Medicaid, WIC, LIHEAP, and Lifeline, and explains the results at a 6th-grade reading level with a clear next step.
