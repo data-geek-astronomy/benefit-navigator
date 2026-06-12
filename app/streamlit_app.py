@@ -112,8 +112,16 @@ def main() -> None:
 
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("assistant"):
-        with st.spinner("Thinking…"):
-            turn = get_agent().run_turn(st.session_state.messages)
+        try:
+            with st.spinner("Thinking…"):
+                turn = get_agent().run_turn(st.session_state.messages)
+        except Exception as exc:  # show the real API message, not a redacted one
+            st.error(
+                f"The assistant hit an error.\n\n**{type(exc).__name__}:** {exc}\n\n"
+                "If this mentions the model or a parameter, set a different model "
+                "in the app's Secrets, e.g. `BENEFIT_NAV_MODEL = \"claude-sonnet-4-6\"`."
+            )
+            st.stop()
         st.markdown(turn.text)
 
     st.session_state.messages = turn.messages

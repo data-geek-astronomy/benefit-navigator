@@ -36,6 +36,35 @@ class BenefitNavigatorAgent:
         # Anthropic() reads ANTHROPIC_API_KEY (or an `ant auth login` profile)
         # from the environment.
         self.client = client or anthropic.Anthropic()
+        # Whether to send adaptive thinking + effort. If the configured model or
+        # the installed SDK rejects those, we degrade to a plain request once and
+        # stay degraded for the rest of the process (see _create_message).
+        self._rich_request = True
+
+    def _create_message(self, messages: list[dict[str, Any]]):
+        """Call the Messages API, gracefully degrading on a bad-request error.
+
+        Some models/accounts don't accept `thinking: adaptive` or
+        `output_config.effort`. Rather than crash the whole app, we drop those
+        optional params and retry once so screening still works.
+        """
+        base = dict(
+            model=settings.model,
+            max_tokens=settings.max_tokens,
+            system=SYSTEM_PROMPT,
+            tools=TOOLS,
+            messages=messages,
+        )
+        if self._rich_request:
+            try:
+                return self.client.messages.create(
+                    **base,
+                    thinking={"type": "adaptive"},
+                    output_config={"effort": settings.effort},
+                )
+            except anthropic.BadRequestError:
+                self._rich_request = False  # degrade for the rest of the session
+        return self.client.messages.create(**base)
 
     def run_turn(self, messages: list[dict[str, Any]]) -> AgentTurn:
         """Advance the conversation by one user turn.
@@ -48,15 +77,7 @@ class BenefitNavigatorAgent:
         tool_log: list[dict[str, Any]] = []
 
         for _ in range(settings.max_tool_iterations):
-            response = self.client.messages.create(
-                model=settings.model,
-                max_tokens=settings.max_tokens,
-                system=SYSTEM_PROMPT,
-                thinking={"type": "adaptive"},
-                output_config={"effort": settings.effort},
-                tools=TOOLS,
-                messages=messages,
-            )
+            response = self._create_message(messages)
 
             # Preserve the full assistant content (including thinking + tool_use
             # blocks) — required for a valid follow-up request.
