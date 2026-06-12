@@ -1,0 +1,23 @@
+name: CI
+
+# Runs the deterministic safety net on every push and PR. No API key needed —
+# these are exactly the checks that guard the part that can harm someone.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Unit tests
+        run: pytest -q
+      - name: Rules evals
+        run: python evals/run_evals.py
