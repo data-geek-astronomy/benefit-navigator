@@ -1,0 +1,95 @@
+# =============================================================================
+# Benefit Navigator — Evaluation Cases
+# =============================================================================
+# Two layers of evaluation use this file (see evals/run_evals.py):
+#
+#   * RULES checks   — run the deterministic engine on the structured household
+#                      and assert the status for each program. No API key, no
+#                      cost. These guard the part that must never be wrong.
+#
+#   * AGENT checks   — (with --live) run the full Claude agent on `message`,
+#                      assert it actually called the screening tool, and use an
+#                      LLM judge to grade the explanation against a rubric.
+#
+# Add a case by copying a block. Keep `expected` in sync with programs.yaml.
+# =============================================================================
+
+cases:
+  - name: "single_adult_low_income"
+    message: >
+      I live alone and I make about $1,200 a month. What can I get help with?
+    household:
+      household_size: 1
+      monthly_income: 1200
+    expected:
+      snap: likely_eligible
+      medicaid: likely_eligible
+      wic: not_eligible
+      liheap: likely_eligible
+      lifeline: likely_eligible
+    judge_rubric: >
+      A good answer clearly lists SNAP, Medicaid, LIHEAP, and Lifeline as
+      likely, gives at least one concrete next step, states that this is a
+      pre-screening (not a decision) and that applying is free, and uses plain
+      language with no unexplained jargon.
+
+  - name: "family_of_four_borderline"
+    message: >
+      There are four of us — me, my partner, and two little kids, one is a
+      baby. We bring in around $3,500 a month before taxes.
+    household:
+      household_size: 4
+      monthly_income: 3500
+      flags:
+        has_dependent_children: true
+        has_child_under_5: true
+    expected:
+      snap: possibly_eligible
+      medicaid: likely_eligible
+      wic: likely_eligible
+      liheap: likely_eligible
+      lifeline: likely_eligible
+    judge_rubric: >
+      A good answer highlights WIC (because of the young child), encourages
+      applying for SNAP even though income is just over the line, and does not
+      discourage the family from applying. Tone is warm and non-judgmental.
+
+  - name: "already_on_snap_categorical"
+    message: >
+      It's just me and my spouse. We already get SNAP. We make about $4,000 a
+      month. Is there anything else?
+    household:
+      household_size: 2
+      monthly_income: 4000
+      enrolled_programs: ["snap"]
+    expected:
+      snap: not_eligible
+      medicaid: not_eligible
+      wic: not_eligible
+      liheap: likely_eligible
+      lifeline: likely_eligible
+    judge_rubric: >
+      A good answer explains that being on SNAP can automatically qualify them
+      for LIHEAP and Lifeline (categorical eligibility), and points to how to
+      apply for those.
+
+  - name: "income_unknown_with_young_child"
+    message: >
+      There are three of us including my 2-year-old. I'm not sure exactly what
+      I make — it changes a lot.
+    household:
+      household_size: 3
+      monthly_income: null
+      flags:
+        has_child_under_5: true
+        has_dependent_children: true
+    expected:
+      snap: needs_more_info
+      medicaid: needs_more_info
+      wic: needs_more_info
+      liheap: needs_more_info
+      lifeline: needs_more_info
+    judge_rubric: >
+      A good answer does NOT invent eligibility. It gently asks for a rough
+      monthly income (or offers an estimate range) so it can screen, and
+      reassures the person that the conversation is judgment-free.

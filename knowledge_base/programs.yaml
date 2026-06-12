@@ -1,0 +1,108 @@
+# =============================================================================
+# Benefit Navigator — Program Knowledge Base
+# =============================================================================
+# This file is the single source of truth for which benefit programs the
+# assistant screens for and what the thresholds are. It is intentionally plain
+# YAML so a NON-TECHNICAL program manager can keep it current without touching
+# Python. To update a rule when policy changes, edit the numbers here, run
+# `make test`, and commit. See RUNBOOK.md ("Updating program rules").
+#
+# IMPORTANT: These figures are ILLUSTRATIVE simplifications for a pre-screening
+# tool. They are not legal eligibility determinations. Real determinations are
+# made by the administering agency. Always confirm current limits with your
+# state agency before relying on them in production.
+# =============================================================================
+
+meta:
+  last_reviewed: "2026-06-01"
+  reviewed_by: "Program team"
+  source_note: >
+    Federal Poverty Level (FPL) figures based on 2024 HHS guidelines for the
+    48 contiguous states + DC. Update annually when new guidelines publish
+    (usually January).
+
+# Federal Poverty Level — used to compute income thresholds by household size.
+# monthly_fpl(size) = (base_annual + (size - 1) * per_additional_person) / 12
+fpl:
+  year: 2024
+  base_annual: 15060
+  per_additional_person: 5380
+
+# Income that falls within this percentage ABOVE a program's limit is reported
+# as "possibly_eligible" rather than a hard "not_eligible", because intake
+# income is often approximate and deductions can change the picture.
+borderline_band_pct: 10
+
+programs:
+  - id: snap
+    name: "SNAP (Supplemental Nutrition Assistance Program)"
+    category: "Food"
+    description: >
+      Monthly benefits to help buy groceries, loaded onto an EBT card.
+    income_limit_pct_fpl: 130
+    income_basis: "gross monthly household income"
+    # If the household is already enrolled in any of these, they generally
+    # qualify for SNAP without a separate income test (categorical eligibility).
+    categorical_shortcuts: ["tanf", "ssi"]
+    apply_url: "https://www.fns.usda.gov/snap/state-directory"
+    next_steps: >
+      Apply through your state SNAP office. You'll need ID, proof of income,
+      and housing costs. Many states let you apply online in about 20 minutes.
+
+  - id: medicaid
+    name: "Medicaid (Adult Health Coverage)"
+    category: "Healthcare"
+    description: >
+      Free or low-cost health coverage for adults with limited income in
+      states that expanded Medicaid.
+    income_limit_pct_fpl: 138
+    income_basis: "monthly household income (MAGI)"
+    categorical_shortcuts: []
+    apply_url: "https://www.healthcare.gov/medicaid-chip/"
+    next_steps: >
+      Apply any time of year through your state Medicaid agency or
+      HealthCare.gov. Coverage can be backdated up to 3 months in many states.
+
+  - id: wic
+    name: "WIC (Women, Infants, and Children)"
+    category: "Food & Nutrition"
+    description: >
+      Food, nutrition counseling, and healthcare referrals for pregnant or
+      postpartum people and children under 5.
+    income_limit_pct_fpl: 185
+    income_basis: "gross monthly household income"
+    # Applicant must meet AT LEAST ONE of these conditions to qualify at all.
+    required_conditions_any: ["pregnant_or_postpartum", "has_child_under_5"]
+    categorical_shortcuts: ["snap", "tanf", "medicaid"]
+    apply_url: "https://www.fns.usda.gov/wic/wic-how-apply"
+    next_steps: >
+      Contact your local WIC clinic to schedule an appointment. Bring proof of
+      income, ID, and proof of pregnancy or the child's age.
+
+  - id: liheap
+    name: "LIHEAP (Home Energy Assistance)"
+    category: "Utilities"
+    description: >
+      Help paying heating and cooling bills, and sometimes emergency energy
+      crisis assistance.
+    income_limit_pct_fpl: 150
+    income_basis: "monthly household income"
+    categorical_shortcuts: ["snap", "tanf", "ssi"]
+    apply_url: "https://www.acf.hhs.gov/ocs/programs/liheap"
+    next_steps: >
+      Apply through your state or local LIHEAP office. Funds are limited and
+      often run out, so apply early in the heating/cooling season.
+
+  - id: lifeline
+    name: "Lifeline (Phone & Internet Discount)"
+    category: "Utilities"
+    description: >
+      A monthly discount on phone or internet service for eligible low-income
+      households.
+    income_limit_pct_fpl: 135
+    income_basis: "monthly household income"
+    categorical_shortcuts: ["snap", "medicaid", "ssi", "tanf"]
+    apply_url: "https://www.lifelinesupport.org/"
+    next_steps: >
+      Apply online through the National Verifier, or ask a participating phone
+      or internet company to help you enroll.

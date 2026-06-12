@@ -1,0 +1,9 @@
+# Core
+anthropic>=0.72.0      # Claude SDK (adaptive thinking, output_config, structured outputs)
+PyYAML>=6.0            # knowledge base + eval cases
+
+# UI
+streamlit>=1.36.0      # staff-facing chat app
+
+# Dev / tests / evals
+pytest>=8.0.0

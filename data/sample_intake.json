@@ -1,0 +1,37 @@
+{
+  "_comment": "Example structured intake records. Useful for demos and for testing the screening engine directly without the chat UI. Feed any of these into benefit_navigator.rules.screen() or the screen_benefits tool.",
+  "samples": [
+    {
+      "label": "Single adult, very low income",
+      "household_size": 1,
+      "monthly_income": 1200,
+      "state": "TX",
+      "enrolled_programs": [],
+      "flags": {}
+    },
+    {
+      "label": "Family of four with a baby, income just over SNAP line",
+      "household_size": 4,
+      "monthly_income": 3500,
+      "state": "CA",
+      "enrolled_programs": [],
+      "flags": { "has_dependent_children": true, "has_child_under_5": true }
+    },
+    {
+      "label": "Couple already on SNAP, higher income",
+      "household_size": 2,
+      "monthly_income": 4000,
+      "state": "OH",
+      "enrolled_programs": ["snap"],
+      "flags": {}
+    },
+    {
+      "label": "Senior on a fixed income",
+      "household_size": 1,
+      "monthly_income": 1100,
+      "state": "FL",
+      "enrolled_programs": ["ssi"],
+      "flags": { "is_senior_62_plus": true, "is_disabled": true }
+    }
+  ]
+}
